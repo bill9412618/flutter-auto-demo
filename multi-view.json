@@ -11,24 +11,6 @@
          "window_type":"PANEL_TOP",
          "width":640,
          "height":360
-      },
-      {
-         "bundle_path":"/usr/share/flutter/test_egl",
-         "window_type":"PANEL_BOTTOM",
-         "width":640,
-         "height": 360
-      },
-      {
-         "bundle_path":"/usr/share/flutter/flutter_secure_storage_example",
-         "window_type":"PANEL_LEFT",
-         "width":640,
-         "height":360
-      },
-      {
-         "bundle_path":"/usr/share/flutter/localization",
-         "window_type":"PANEL_RIGHT",
-         "width": 640,
-         "height":360
       }
    ]
 }
