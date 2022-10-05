@@ -3,31 +3,32 @@
       {
          "bundle_path":"/usr/share/flutter/pumped_end_device",
          "window_type":"BG",
-         "fullscreen":true
+         "width":640,
+         "height":360
       },
       {
          "bundle_path":"/usr/share/flutter/animated_background_example",
          "window_type":"PANEL_TOP",
-         "width":1920,
-         "height":200
+         "width":640,
+         "height":360
       },
       {
          "bundle_path":"/usr/share/flutter/test_egl",
          "window_type":"PANEL_BOTTOM",
-         "width":1920,
-         "height": 200
+         "width":640,
+         "height": 360
       },
       {
          "bundle_path":"/usr/share/flutter/flutter_secure_storage_example",
          "window_type":"PANEL_LEFT",
-         "width":200,
-         "height":1280
+         "width":640,
+         "height":360
       },
       {
          "bundle_path":"/usr/share/flutter/localization",
          "window_type":"PANEL_RIGHT",
-         "width": 200,
-         "height":1280
+         "width": 640,
+         "height":360
       }
    ]
 }
