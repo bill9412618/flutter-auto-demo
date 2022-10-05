@@ -3,7 +3,7 @@
       {
          "bundle_path":"/usr/share/flutter/pumped_end_device",
          "window_type":"BG",
-         "fullscreen":true,
+         "fullscreen":true
       },
       {
          "bundle_path":"/usr/share/flutter/animated_background_example",
@@ -28,6 +28,6 @@
          "window_type":"PANEL_RIGHT",
          "width": 200,
          "height":1280
-      },
+      }
    ]
 }
