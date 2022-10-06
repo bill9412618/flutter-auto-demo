@@ -5,7 +5,7 @@
 			"id": "desktop-auto",
 			"type": "host",
 			"arch": "x86_64",
-			"flutter_runtime": "profile",
+			"flutter_runtime": "release",
 			"runtime": {
 				"backend": "egl",
 				"config": {
@@ -42,7 +42,7 @@
 			"id": "AGL-qemu",
 			"type": "qemu",
 			"arch": "x86_64",
-			"flutter_runtime": "profile",
+			"flutter_runtime": "release",
 			"runtime": {
 				"config": {
 					"window_type": "BG",
