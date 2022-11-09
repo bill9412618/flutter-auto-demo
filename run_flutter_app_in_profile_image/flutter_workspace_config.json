@@ -4,7 +4,6 @@
 		{
 			"id": "desktop-auto",
 			"type": "host",
-			"arch": "x86_64",
 			"flutter_runtime": "profile",
 			"runtime": {
 				"backend": "egl",
@@ -18,7 +17,7 @@
 				"github_owner": "toyota-connected",
 				"github_repo": "ivi-homescreen",
 				"github_workflow": "flutter-auto-linux.yml",
-				"github_artifact": "flutter-auto-${BACKEND}-dbg.amd64.deb.zip"
+				"github_artifact": "flutter-auto-${BACKEND}-dbg"
 			},
 			"overwrite-existing": true,
 			"custom-device": {
@@ -41,7 +40,6 @@
 		{
 			"id": "AGL-qemu",
 			"type": "qemu",
-			"arch": "x86_64",
 			"flutter_runtime": "profile",
 			"runtime": {
 				"config": {
@@ -51,21 +49,26 @@
 					"fullscreen": true
 				},
 				"install_dependent_packages": true,
-				"relative_path": ".agl/agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemux86-64.wic.vmdk",
 				"artifact_source": "github",
 				"github_owner": "meta-flutter",
 				"github_repo": "meta-flutter",
-				"github_workflow": "kirkstone-agl-x86_64.yml",
-				"github_artifact": "agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemux86-64-linux",
-				"ovmf_path": "/usr/share/ovmf/OVMF.fd",
-				"cmd": "qemu-system-x86_64",
-				"args": "-m 2048 -bios ${OVMF_PATH} -hda ${QEMU_IMAGE} -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -show-cursor -device virtio-rng-pci -serial mon:stdio -serial null -soundhw hda -device virtio-net-pci,netdev=net0,mac=52:54:00:12:35:02 -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::1234-:1234"
+				"github_workflow": "kirkstone-agl-${MACHINE_ARCH}.yml",
+				"github_artifact": "agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemu${MACHINE_ARCH_HYPHEN}-linux",
+				"cmd": "qemu-system-${FORMAL_MACHINE_ARCH}",
+				"args_x86_64": "-m 2048 ${QEMU_EXTRA} -hda ${QEMU_IMAGE} -cpu kvm64 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -device virtio-rng-pci -serial mon:stdio -serial null -soundhw hda -device virtio-net-pci,netdev=net0,mac=${RANDOM_MAC} -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::1234-:1234",
+                "qemu_image_x86_64": ".agl/agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemux86-64.wic.vmdk",
+				"args_arm64": "-accel hvf -cpu host -M virt ${QEMU_EXTRA} -m 4096 -device virtio-gpu-pci -nographic -display cocoa,show-cursor=on -object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-pci,rng=rng0 -device qemu-xhci -device usb-tablet -device usb-mouse -device usb-kbd -device virtio-net-pci,netdev=vnet -netdev user,id=vnet,hostfwd=tcp::2222-:22,hostfwd=tcp::1234-:1234 -kernel ${KERNEL} -drive file=${QEMU_IMAGE},format=raw,if=virtio -append root=/dev/vda",
+				"kernel_arm64": ".agl/Image-qemuarm64.bin",
+				"qemu_image_arm64": ".agl/agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemuarm64.ext4",
+				"qemu_extra_darwin": "-smp cpus=8,sockets=1,cores=8,threads=1",
+				"qemu_extra_ubuntu": "-bios OVMF.fd -show-cursor",
+				"qemu_extra_fedora": "-bios /usr/share/edk2/ovmf/OVMF_CODE.fd"
 			},
 			"overwrite-existing": true,
 			"custom-device": {
 				"id": "AGL-qemu",
-				"label": "AGL x86_64 QEMU Image",
-				"sdkNameAndVersion": "agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemux86-64.wic.vmdk",
+				"label": "AGL ${MACHINE_ARCH} QEMU Image",
+				"sdkNameAndVersion": "agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemu${MACHINE_ARCH_HYPHEN}",
 				"platform": "linux-x64",
 				"enabled": true,
 				"ping": [
@@ -93,6 +96,92 @@
 				"forwardPortSuccessRegex": null,
 				"screenshot": null
 			}
+		},
+		{
+			"id": "stm32mp15-weston",
+			"type": "target",
+			"arch": "linux-arm",
+			"flutter_runtime": "debug",
+			"overwrite-existing": true,
+			"custom-device": {
+				"id": "stm32mp15-weston",
+				"label": "STM32MP157F-DK2",
+				"sdkNameAndVersion": "STM32 Discovery Board (Dual Cortex-A7)",
+				"platform": null,
+				"enabled": true,
+				"ping": ["ping", "-c", "1", "-w", "400", "stm32mp15-disco.local"],
+				"pingSuccessRegex": "[<=]\\d+ms",
+				"postBuild": ["bash", "-c", "mkdir -p ${localPath}/../../.flutter-auto/data/flutter_assets && cp -r ${localPath}/* ${localPath}/../../.flutter-auto/data/flutter_assets && ssh -t -oBatchMode=yes root@stm32mp15-disco.local passwd -d weston"],
+				"install": ["bash", "-c", "mkdir -p /tmp/${appName}/data/flutter_assets && cp -r ${BUNDLE_FOLDER}/* /tmp/${appName} && scp -r ${localPath}/* weston@stm32mp15-disco.local:/tmp/${appName}/data/flutter_assets"],
+				"uninstall": ["ssh", "-o", "BatchMode=yes", "weston@stm32mp15-disco.local", "rm -rf \"/tmp/${appName}\""],
+				"runDebug": [
+					"ssh",
+					"-t",
+					"-t",
+					"-o",
+					"BatchMode=yes",
+					"weston@stm32mp15-disco.local",
+					"flutter-auto --b=/tmp/${appName} --f"
+				],
+				"forwardPort": ["ssh", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes", "-L", "127.0.0.1:${hostPort}:127.0.0.1:${devicePort}", "weston@stm32mp15-disco.local", "echo 'Port forwarding success'; read"],
+				"forwardPortSuccessRegex": "Port forwarding success",
+				"screenshot": null
+			}
+		},
+		{
+			"id": "pi-zero2w-weston",
+			"type": "target",
+			"arch": "aarch64",
+			"flutter_runtime": "debug",
+			"overwrite-existing": true,
+			"custom-device": {
+				"id": "pi-zero2w-weston",
+				"label": "Raspberry Pi Zero 2W",
+				"sdkNameAndVersion": "Raspberry Pi Zero 2W (flutter-auto)",
+				"platform": "linux-arm64",
+				"enabled": true,
+				"ping": [
+					"ping",
+					"-c",
+					"1",
+					"-w",
+					"500",
+					"raspberrypi0-2w-64.local"
+				],
+				"pingSuccessRegex": "1 packets transmitted, 1 received",
+				"postBuild": ["bash", "-c", "mkdir -p ${localPath}/../../.flutter-auto/data/flutter_assets && cp -r ${localPath}/* ${localPath}/../../.flutter-auto/data/flutter_assets && ssh -t -oBatchMode=yes root@raspberrypi0-2w-64.local passwd -d weston"],
+				"install": ["bash", "-c", "mkdir -p /tmp/${appName}/data/flutter_assets && cp -r ${BUNDLE_FOLDER}/* /tmp/${appName} && scp -r ${localPath}/* weston@raspberrypi0-2w-64.local:/tmp/${appName}/data/flutter_assets"],
+				"uninstall": [
+					"ssh",
+					"-o",
+					"BatchMode=yes",
+					"weston@raspberrypi0-2w-64.local",
+					"rm -rf \"/tmp/${appName}\""
+				],
+				"runDebug": [
+					"ssh",
+					"-t",
+					"-t",
+					"-o",
+					"BatchMode=yes",
+					"weston@raspberrypi0-2w-64.local",
+					"flutter-auto --b=/tmp/${appName} --f"
+				],
+				"forwardPort": [
+					"ssh",
+					"-t",
+					"-t",
+					"-o",
+					"BatchMode=yes",
+					"-o",
+					"ExitOnForwardFailure=yes",
+					"-L",
+					"127.0.0.1:${hostPort}:127.0.0.1:${devicePort}",
+					"weston@raspberrypi0-2w-64.local",
+					"echo 'Port forwarding success'; read"
+				],
+				"forwardPortSuccessRegex": "Port forwarding success",				"screenshot": null
+			}
 		}
 	],
 	"repos": [
@@ -103,24 +192,9 @@
 			"pubspec_path": "gallery"
 		},
 		{
-			"uri": "git@github.com:meta-flutter/tests.git",
-			"branch": "main"
-		},
-		{
-			"uri": "https://github.com/meta-flutter/flutter_animated_background.git",
-			"branch": "meta-flutter",
-			"pubspec_path": "flutter_animated_background/example"
-		},
-		{
 			"uri": "https://github.com/mogol/flutter_secure_storage.git",
 			"branch": "develop",
-			"rev": "e716593352b80330e05729486eade7c2167d3c71",
 			"pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
-		},
-		{
-			"uri": "https://github.com/felipeerias/flutter_homescreen.git",
-			"branch": "main",
-			"pubspec_path": "flutter_homescreen"
 		},
 		{
 			"uri": "https://github.com/bernardpumped/ped.git",
@@ -128,29 +202,16 @@
 			"pubspec_path": "ped"
 		},
 		{
-			"uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-dashboard.git",
-			"branch": "master",
-			"pubspec_path": "flutter-dashboard"
+			"uri": "https://github.com/meta-flutter/flutter_animated_background.git",
+			"branch": "meta-flutter",
+			"rev": "46f35ad2a323ab006813a3c4748163536b0fc332",
+			"pubspec_path": "flutter_animated_background/example"
 		},
 		{
-			"uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-hvac.git",
-			"branch": "master",
-			"pubspec_path": "flutter-hvac"
-		},
-		{
-			"uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-instrument-cluster.git",
-			"branch": "master",
-			"pubspec_path": "flutter-instrument-cluster"
-		},
-		{
-			"uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-mediaplayer.git",
-			"branch": "master",
-			"pubspec_path": "flutter-mediaplayer"
-		},
-		{
-			"uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-navigation.git",
-			"branch": "master",
-			"pubspec_path": "flutter-navigation"
+			"uri": "https://github.com/felipeerias/flutter_homescreen.git",
+			"branch": "main",
+			"rev": "08bf271f7f1f14153a41005718a2090fa8e783f0",
+			"pubspec_path": "flutter_homescreen"
 		}
 	]
 }
